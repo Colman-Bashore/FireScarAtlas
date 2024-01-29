@@ -1,1 +1,38 @@
-# FireScarAtlas
+# Machine Learning Based Classification and Web Visualization of Burn Scars in Washington State using Google Earth Engine and 40 years of LANDSAT Satellite Imagery
+
+##### Author: Colman Bashore, Middlebury College
+
+![Decades](/Assets/Decades_img.png)
+
+[Link to interactive Washington Fire Scar Atlas web application](https://cbashore.users.earthengine.app/view/washington-fire-scar-atlas)
+
+[Link to Google Earth Engine Code repository](https://code.earthengine.google.com/?accept_repo=users/cbashore/fireapp)
+
+
+### Introduction 
+Over the course of the past decade the Pacific Northwest has experienced a wave of wildfires that have destroyed towns, taken lives, and covered massive areas in dark smoke. While thousands of firefighters have worked tirelessly to contain these blazes, in many situations the largest fires cannot be stopped by humans alone. Often, a fire will only burn itself out when it runs into the burn scar of a previous fire, a barren area containing no potential fuel for the active fire. Knowledge of this pattern can help assist firefighters in the containment of fires, and mapping burn scars can give us an understanding of if this pattern actually holds true in a larger number of situations. If we map burn scars of an entire state over 40 years, can we expect to see that burn scars in consecutive years rarely overlap? Mapping burn scars using satellite imagery can also give us an idea of which areas burn over and over again over the course of many years. The advantage of using satellite imagery is the large temporal and areal extent that is accessible as compared to using drone or airplane images. Previous attempts to create burned area maps include the European Space Agency’s fire_cci layer which is a global burned area layer, however this layer is derived from the MODIS satellite which only has a spatial resolution of 250 meters. Long et al. (2019) created a product known as GABAM (global burned area map) using LANDSAT satellite imagery at a 30-meter spatial resolution. This project encountered many challenges, such as identifying burn scars in diverse biomes across the globe and differentiating between crop harvesting and burns. However, this product is the current best available burned area map and runs from 2000 to 2018. My project attempts to replicate some of the basic methods of the Long et al. study to create a 30 meter burned area dataset for the state of Washington across 40+ years. The challenges that confront anyone who tries to build a dataset such as this are many. First, satellite imagery is always subject to issues with cloud cover and anomalies in reflectance which will make it much harder for a classifier to correctly identify land cover types. Land cover types are already difficult to distinguish from imagery as is; bare ground areas and burn scars appear similar as do completely bare agricultural fields. Satellite imagery also faces the issue of poor spatial resolution. The LANDSAT satellite is fairly high resolution at 30 meters, but other products such as the fire_cci map suffer due to coarse spatial resolution. In addition to making static burned area maps, in order to produce a dataset of many maps over many years, images from several different individual satellites, with different reflectance bands will have to be used. All of these factors are threats to the completion of a product like GABAM or the collection of layers that this project intends to create. Within the overarching goal of this project there are four sub-goals:
+Goals:
+-	Develop an imagery classification algorithm that isolates burn scars for a given year and region from 30m LANDSAT imagery.
+-	Create layers of burn scars for as many years as possible, including years that have not been covered by GABAM, by creating reusable scripts for different years and satellites.
+-	Combine those raster images as static layers into a separate interactive web app. Create unique cartographic methods for the user to interactively study the yearly layers as well as add a layer of areas that have burned many times. 
+-	Describe the process and challenges of creating a regional burned area map using satellite imagery and the added benefit for fire containment that this study provides.
+
+### Methods
+
+#### Analysis
+The first stage of this project was to train a random forest classifier to create a regional single-year burnt area map derived from LANDSAT imagery. I tested my first round of classification on imagery from the LANDSAT 8 satellite from 2018. The first step was to load in the LANDSAT 8 collection and filter it to images from post-fire season 2018. I also clipped the imagery to the outline of the state of Washington and applied a cloud mask to remove as many clouds from the images as possible. I then had a mosaic of LANDSAT images from late 2018 in the shape of Washington State from which I planned to classify the landcover to determine fire scars. Long et al. use a total of 14 parameters in their classification. I used the spectral module to calculate the same spectral indices used by Long et al. These indices were: NBR, NBR2, BAI, GEMI, MIRBI, NDVI, SAVI, and NDMI. In addition to the spectral indices both Long et al. and myself also used the 6 surface reflectance bands native to LANDSAT. After calculating the 8 spectral indices for the imagery of Washington I then hand selected 175 feature points defined as either water, snow/ice, nonburn, or burn. This collection of features was then split into training and testing collections. I used a random forest classifier which I trained on the training points and using the 6 reflectance bands and 8 spectral indices. Once trained, I ran the classifier on my image mosaic so that it produced a classified raster layer of the state of Washington divided into water, snow/ice, nonburn, and burn. The classified image was then compared to the testing points collection and a confusion matrix and kappa coefficient were generated to measure accuracy.
+With the aim of creating a layer of burn scars that is easier to visualize and less noisy, I then thresholded the image to isolate only the burn scars and then used a neighborhood (kernel) operation to clump the burn scars into distinct objects. Then, to reduce noise, I filtered the burn scars objects to only keep the burn scars larger than one square kilometer in area. This sequence of steps produced a single-year layer of burn scars in Washington. 
+
+The second stage of the project was to reproduce my workflow for generating a single year of burn scars across 40 years of LANDSAT imagery. To accomplish this task, I broke down all of my steps into callable functions within Google Earth Engine and created two versions of one overarching function that could create a complete burn scar layer needing only the year I wanted to calculate for. I created one version for use on the Landsat 5 and 7 satellites and one version for the Landsat 8 and 9 satellites because these two pairs of satellites each had the same named reflectance bands. To accomplish this task of only needing on input I created a large dictionary of information about each year I needed to calculate, including which satellites imagery would be pulled from, and appropriate dates to filter by for that year. Then from this script I created burn scars layers from 1984 to 2023 and exported these as assets into my Earth Engine account such that they could then be loaded quickly into an app. 
+
+
+#### Visualization
+
+### Results
+
+### Discussion
+
+### Conclusion
+##### Summary
+##### Critique
+##### Future Work
