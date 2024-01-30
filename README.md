@@ -1,6 +1,7 @@
 # Machine Learning Based Classification and Web Visualization of Burn Scars in Washington State using Google Earth Engine and 40 years of LANDSAT Satellite Imagery
 
 ##### Author: Colman Bashore, Middlebury College
+##### Advisor: Professor Jeff Howarth, Middlebury College
 
 ![Decades](/Assets/Decades_img.png)
 
@@ -83,3 +84,7 @@ Landsat-5, Landsat-7, Landsat-8, and Landsat-9 Collection 2, Tier 1, Level 2 dat
 
 Weber, E., Moehl, J., Weston, S., Rose, A., Brelsford, C., & Hauser, T. (2022). LandScan USA 2021 [Data set]. Oak Ridge National Laboratory. https://
 doi.org/10.48690/1527701 
+
+##### Acknowledgements
+
+This project would not have been possible without the guidance of Professor Jeff Howarth and the resources of the Middlebury College Geography Department.
