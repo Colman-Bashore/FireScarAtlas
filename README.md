@@ -57,17 +57,25 @@ While the classifier model and app provide value to the field of fire mapping an
 
 ### Conclusion
 ##### Summary
+This project covered two main endeavors. First, I developed an Google Earth Engine Script that takes LANDSAT imagery and produces a classified image of burn scars across the extent of a given state for every year that imagery is provided. Second, I created a Google Earth Engine web application that steps the user through the spatial and temporal patterns of burn scars in the state of Washington. Using the burn scar creation script I produced a large dataset of burn scars that is now accessible as an image collection in Google Earth Engine for rapid import and analysis. The image collection is accessible at this link: [Burn Scar Asset](https://code.earthengine.google.com/?asset=users/cbashore/fires). The web application demonstrates fire trends over time at the statewide level and also allows users, who may range from the general public to fire and government officials, to explore burns at a closer level in several regions. 
 ##### Critique
+While this project achieved its primary goals in only four weeks, the burn scar creation script could be both improved and expanded upon. For the purposes of visualization, the burn scars were filtered to remove any burn scars with a connected area less than one square kilometer. This ended up cutting out more potential burn scars than intended. For the general user this doesn't affect the app, but for future use of the burn scar algorithm to measure fire it would be more effective to reduce the intensity of the filtering. Overall, the classifier identified burn scars that visually aligned with major known fires, and had a high accuracy within its own testing set. However, there were some misidentifications and the results were not tested against some external dataset such the Monitoring Trends in Burn Severity dataset, against which Long et al. tested their results. In particular, the area around Mount St. Helens was often identified as a burn scar in the model. This area has not had major fires as are indicated by the data, rather the surrounding land was deforested and covered in magma and ash following the 1980 eruption of Mount St. Helens. This suggests that the spectral signatures of land impacted by Volcanic eruption is similar to land that has been severely burned. This erorr in the model would require further fine-tuning to clarify.  Overall, the algorithm would benefit from a larger training set and a more definitive dataset that clearly identifies burn scars for the model to be trained on. 
 ##### Future Work
+Not only would be classifier benefit from increased training but the burn scar algorithm could also be applied across more geographies now that it has been used on the state of Washington. The algorithm has been written so that it would take minimal adjustment to apply the code on a new region given that LANDSAT imagery has global coverage. The app could not be as easily transitioned to another state, however, future visualization work could include a greater emphasis on the non-burn-scar components of fire, such as smoke and particular matter that impact towns. While burn scars luckily rarely overlapped with populated areas directly, the impacts were felt strongly due to the effects of smoke, and a smoke layer in future iterations of the app would provide added value. Finally, future work should be dedicated towards teaching other undergraduate students the process of self-guided learning for remote sensing and cartography. I would like to pass on this description of my project as a way of documenting my methodology of asking a question about the natural world, developing a script to identify patterns in this phenomenon, and then visualize these patterns for others and walk them through my observations. 
 
 ### Bibliography
-##### Works Cited
+##### Previous Works
 
 Long, T., Zhang, Z., He, G., Jiao, W., Tang, C., Wu, B., Zhang, X., Wang, G., & Yin, R. (2019). 30 m Resolution Global Annual Burned Area Mapping Based on Landsat Images and Google Earth Engine. Remote Sensing, 11(5), Article 5. https://doi.org/10.3390/rs11050489
 
+##### Works Cited
+
 Nature—North Cascades National Park (U.S. National Park Service). Retrieved January 30, 2024, from https://www.nps.gov/noca/learn/nature/index.htm
 
-TwispWorks Economic Impact study of the Methow Valley
+Tate-Libby, J. (2021). TwispWorks Comprehensive Economic Study of the Methow Valley. https://drive.google.com/file/d/1wpf1_fUfBjPbUL4xBWL8j5lYmZvoklQ1/view?usp=embed_facebook
+
+Wildfires Lead to Helicopter Rescues in California and Destruction in Washington. (2020, September 8). The New York Times. https://www.nytimes.com/2020/09/08/us/wildfires-live-updates.html
+
 
 ##### Data Sources for Scripts
 Landsat-5, Landsat-7, Landsat-8, and Landsat-9 Collection 2, Tier 1, Level 2 datasets courtesy of the U.S. Geological Survey
