@@ -27,8 +27,11 @@ The second stage of the project was to reproduce my workflow for generating a si
 
 
 #### Visualization
+This project not only focused on creating a model to estimate burn scars from imagery but also aimed to create a web application for the general public that could be used to answer important questions about the trends of fire in Washington State. The emphasis of this visualization stage was on web-based cartography and storytelling through a Google Earth Engine app. Using my 40 layers of burn scars I created an app that answers questions such as, "do the spatiotemporal trends of fire in Washington match popular media headlines?", "what areas in the state have burned most recently or burned the most times?", and  "how have different regions in the state been impacted by fire, what are the natural causes of these differences, and what are the human impacts on these regions?" The app is designed as an atlas of burn scars that is highly interactive and geared towards the general public. The first component of this app is a page that introduces the user to the atlas and shows a chart of burned area over time, a map of what areas have burned most, and a map of when areas have been burned most recently. The goal behind this stage was to demonstrate the overall trend of increasing acreage burnt as well as allow the user to peruse the state as a whole and examine broad trends. The app is designed similarly to a story map in a software such as ArcGIS or Mapbox, such that the user steps through different stages of the app in a linear manner. The second stage is an examination of the state on a decade-by-decade basis. I aggregated by burn scar layers into 10 year chunks from 1984 to 2023 (exactly 40 years). These decade layers can then be toggled on an and off to make comparisons. The next three stages of the app focus on specific regions within the state that have experienced fire and deserve closer attention. I define the the three distinct regions I identified as having significant histories of fire as the "North Cascades Region", an area stretching from North Cascades National Park through the Methow valley, the "Chelan - Grand Coulee Region", which contains Wenatchee, Lake Chelan, and the Grand Coulee Damn, and finally the "Columbia Region" which I define as a broad region surrounding the Columbia River between Yakima, the Tri-Cities, and Hanford Reach National Monument. Each of these regions gets its own panel within the app and for each region the user can pull up burn scars from any year from 1984 to 2023. Part of the motivation for this project was to examine how new burns rarely overlap with recent burns because they run into areas of low fuel. To visualize this hypothesis when a year is selected its burn scars are shown at full saturation and the previous two years burn scars are also shown but in a much more subdued color. The user also has the ability to toggle on several reference layers, namely a Normalized Burn Ratio layer, the LANDSAT composite image that the model ran on, and a 2021 population layer. The goal of the first two reference layers is to give the user both an idea of what the model is based off of as well as get a better sense of the kind of terrain that the wildfires are burning on. The population layer aims to call out areas of close contact between human settlement and burns. While these areas luckily rarely overlap, the population layer and the basemap itself allow the user to examine what towns have been hazardously close to burns. 
+
 
 ### Results
+
 
 ### Discussion
 
@@ -36,3 +39,6 @@ The second stage of the project was to reproduce my workflow for generating a si
 ##### Summary
 ##### Critique
 ##### Future Work
+
+### Bibliography
+
