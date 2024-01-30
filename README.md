@@ -41,4 +41,12 @@ This project not only focused on creating a model to estimate burn scars from im
 ##### Future Work
 
 ### Bibliography
+##### Previous Work
 
+Long, T., Zhang, Z., He, G., Jiao, W., Tang, C., Wu, B., Zhang, X., Wang, G., & Yin, R. (2019). 30 m Resolution Global Annual Burned Area Mapping Based on Landsat Images and Google Earth Engine. Remote Sensing, 11(5), Article 5. https://doi.org/10.3390/rs11050489
+
+##### Data Sources for Scripts
+Landsat-5, Landsat-7, Landsat-8, and Landsat-9 Collection 2, Tier 1, Level 2 datasets courtesy of the U.S. Geological Survey
+
+Weber, E., Moehl, J., Weston, S., Rose, A., Brelsford, C., & Hauser, T. (2022). LandScan USA 2021 [Data set]. Oak Ridge National Laboratory. https://
+doi.org/10.48690/1527701 
