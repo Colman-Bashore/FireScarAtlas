@@ -31,7 +31,14 @@ This project not only focused on creating a model to estimate burn scars from im
 
 
 ### Results
+##### Burn Scar Model Accuracy
+The first goal of this project was to use a classifier to create burn scars based on satellite imagery, which required many tweaks in input data and bands and indices from which to classify an image. During this process I implemented a confusion matrix and kappa coefficient calculation within Google Earth Engine to measure the accuracy of my model. This was done by splitting my point dataset into training and testing points, training the classifier with the training points, classifying an image and then measuring its accuracy on guessing the nature of the testing points. For my model I was specifically testing on my first script which focused only on 2018 and was seperating images into water, burned, and notburned. My confusion matrix for my model trained and tested on 175 data points from 2018 produced an overall accuracy of 0.953 and a Kappa Coefficient of 0.912 implying that the model was able to predict burn scars above chance levels. 
 
+##### Patterns of Burn Scars
+On the visualization end of this project the burn scar layers created by the model and the subsequent app revealed several interesting trends. First the total areas determined as burned each year has seen an uptick over time. The following chart is included within the web app and exhibits the annual percent difference from median acres burned over 40 years. The median burned area for this dataset was approximately 54,000 acres.
+![Time Chart](/Assets/ee-chart.png)
+The year 2020 stands out above all other years with an anomaly of over 1000% more burned area than the median burned acreage. Verifying these specific statistics would require more fine tuning of our classification model, but the relative comparisons of yearly burns tell a compelling story. 
+On a regional scale, there were several different patterns that emerged. The Columbia Region had the most recurring burns, with some areas burning four or five seperate times. The Chelan - Grand Coulee Region had relatively few major burns from 1984-2000, but since then has experienced several massive fires. Both the North Cascades and Chelan - Grand Coulee Regions have experienced major wildfires despite differing biomes, with the North Cascades being heavily forested and the Chelan-Grand Coulee being far less so and predominantly agricultural or arid. 
 
 ### Discussion
 
