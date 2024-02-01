@@ -1,4 +1,4 @@
-# The Washington Fire Scar Atlas:
+## The Washington Fire Scar Atlas:
 ### A Machine Learning-Based Classification and Interactive Web Visualization of Burn Scars in Washington State using Google Earth Engine and 40 years of LANDSAT Satellite Imagery
 
 ##### Author: Colman Bashore, Middlebury College
