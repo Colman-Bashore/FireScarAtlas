@@ -1,0 +1,16 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var landscan_usa_night = ee.ImageCollection("projects/sat-io/open-datasets/ORNL/LANDSCAN_USA_NIGHT");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+
+var FS = require("users/cbashore/fireapp:FireScars");
+FS = FS.FS;
+var palettes = require('users/gena/packages:palettes');
+
+
+var pop = {};
+pop.wa = landscan_usa_night.filterDate('2021-01-01', '2021-12-31').min().clip(FS.washington);
+
+
+exports.pop = pop;
+
+Map.addLayer(pop.wa, {min:0, max:15,palette: palettes.cmocean.Tempo[7]});

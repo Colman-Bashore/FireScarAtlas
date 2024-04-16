@@ -1,0 +1,141 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var ic = ee.ImageCollection("users/cbashore/fires"),
+    geometry = /* color: #d63000 */ee.Geometry.Point([-120.54897050918406, 47.67862544509967]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+// Colman Bashore
+// Calculate burn area over time
+
+// Imports
+var cart = require('users/jhowarth/eePrimer:modules/cart.js');
+var FS = require("users/cbashore/fireapp:FireScars");
+FS = FS.FS;
+var washington = ee.FeatureCollection('FAO/GAUL_SIMPLIFIED_500m/2015/level1').filterBounds(geometry);
+
+// Make layers
+var yr1984 = ic.filterDate('1984-01-01', '1984-12-31').first();
+var yr1985 = ic.filterDate('1985-01-01', '1985-12-31').first();
+var yr1986 = ic.filterDate('1986-01-01', '1986-12-31').first();
+var yr1987 = ic.filterDate('1987-01-01', '1987-12-31').first();
+var yr1988 = ic.filterDate('1988-01-01', '1988-12-31').first();
+var yr1989 = ic.filterDate('1989-01-01', '1989-12-31').first();
+
+var yr1990 = ic.filterDate('1990-01-01', '1990-12-31').first();
+var yr1991 = ic.filterDate('1991-01-01', '1991-12-31').first();
+var yr1992 = ic.filterDate('1992-01-01', '1992-12-31').first();
+var yr1993 = ic.filterDate('1993-01-01', '1993-12-31').first();
+var yr1994 = ic.filterDate('1994-01-01', '1994-12-31').first();
+var yr1995 = ic.filterDate('1995-01-01', '1995-12-31').first();
+var yr1996 = ic.filterDate('1996-01-01', '1996-12-31').first();
+var yr1997 = ic.filterDate('1997-01-01', '1997-12-31').first();
+var yr1998 = ic.filterDate('1998-01-01', '1998-12-31').first();
+var yr1999 = ic.filterDate('1999-01-01', '1999-12-31').first();
+
+var yr2000 = ic.filterDate('2000-01-01', '2000-12-31').first();
+var yr2001 = ic.filterDate('2001-01-01', '2001-12-31').first();
+var yr2002 = ic.filterDate('2002-01-01', '2002-12-31').first();
+var yr2003 = ic.filterDate('2003-01-01', '2003-12-31').first();
+var yr2004 = ic.filterDate('2004-01-01', '2004-12-31').first();
+var yr2005 = ic.filterDate('2005-01-01', '2005-12-31').first();
+var yr2006 = ic.filterDate('2006-01-01', '2006-12-31').first();
+var yr2007 = ic.filterDate('2007-01-01', '2007-12-31').first();
+var yr2008 = ic.filterDate('2008-01-01', '2008-12-31').first();
+var yr2009 = ic.filterDate('2009-01-01', '2009-12-31').first();
+
+var yr2010 = ic.filterDate('2010-01-01', '2010-12-31').first();
+var yr2011 = ic.filterDate('2011-01-01', '2011-12-31').first();
+var yr2012 = ic.filterDate('2012-01-01', '2012-12-31').first();
+var yr2013 = ic.filterDate('2013-01-01', '2013-12-31').first();
+var yr2014 = ic.filterDate('2014-01-01', '2014-12-31').first();
+var yr2015 = ic.filterDate('2015-01-01', '2015-12-31').first();
+var yr2016 = ic.filterDate('2016-01-01', '2016-12-31').first();
+var yr2017 = ic.filterDate('2017-01-01', '2017-12-31').first();
+var yr2018 = ic.filterDate('2018-01-01', '2018-12-31').first();
+var yr2019 = ic.filterDate('2019-01-01', '2019-12-31').first();
+
+var yr2020 = ic.filterDate('2020-01-01', '2020-12-31').first();
+var yr2021 = ic.filterDate('2021-01-01', '2021-12-31').first();
+var yr2022 = ic.filterDate('2022-01-01', '2022-12-31').first();
+var yr2023 = ic.filterDate('2023-01-01', '2023-12-31').first();
+
+// Add reducer output to the Features in the collection.
+
+var zonalStat = function(img, year){
+  var sumFc = img.unmask().reduceRegions({
+    collection: washington,
+    reducer: ee.Reducer.sum(),
+    scale: 30});
+  var sumYr = ee.Feature(sumFc.first());
+  var sum = ee.Number(sumYr.get('sum'));
+  var acres = (sum.multiply(900).divide(4047));
+  sumYr = sumYr.set('sum', acres).set('year',year);
+  return sumYr;
+};
+var sum2023 = zonalStat(yr2023, '2023');
+var sum2022 = zonalStat(yr2022, '2022');
+var sum2021 = zonalStat(yr2021, '2021');
+
+var sum2020 = zonalStat(yr2020, '2020');
+var sum2019= zonalStat(yr2019, '2019');
+var sum2018= zonalStat(yr2018, '2018');
+var sum2017= zonalStat(yr2017, '2017');
+var sum2016= zonalStat(yr2016, '2016');
+var sum2015= zonalStat(yr2015, '2015');
+var sum2014= zonalStat(yr2014, '2014');
+var sum2013= zonalStat(yr2013, '2013');
+var sum2012= zonalStat(yr2012, '2012');
+var sum2011= zonalStat(yr2011, '2011');
+var sum2010= zonalStat(yr2010, '2010');
+var sum2009= zonalStat(yr2009, '2009');
+var sum2008= zonalStat(yr2008, '2008');
+var sum2007= zonalStat(yr2007, '2007');
+var sum2006= zonalStat(yr2006, '2006');
+var sum2005= zonalStat(yr2005, '2005');
+var sum2004= zonalStat(yr2004, '2004');
+var sum2003= zonalStat(yr2003, '2003');
+var sum2002= zonalStat(yr2002, '2002');
+var sum2001= zonalStat(yr2001, '2001');
+var sum2000= zonalStat(yr2000, '2000');
+var sum1999= zonalStat(yr1999, '1999');
+var sum1998= zonalStat(yr1998, '1998');
+var sum1997= zonalStat(yr1997, '1997');
+var sum1996= zonalStat(yr1996, '1996');
+var sum1995= zonalStat(yr1995, '1995');
+var sum1994= zonalStat(yr1994, '1994');
+var sum1993= zonalStat(yr1993, '1993');
+var sum1992= zonalStat(yr1992, '1992');
+var sum1991= zonalStat(yr1991, '1991');
+var sum1990= zonalStat(yr1990, '1990');
+var sum1989= zonalStat(yr1989, '1989');
+var sum1988= zonalStat(yr1988, '1988');
+var sum1987= zonalStat(yr1987, '1987');
+var sum1986= zonalStat(yr1986, '1986');
+var sum1985= zonalStat(yr1985, '1985');
+var sum1984= zonalStat(yr1984, '1984');
+
+
+print(sum2020);
+Map.addLayer(sum2020);
+
+
+var features = [sum2023, sum2022, sum2021, sum2020,sum2019,sum2018,sum2017, sum2016, sum2015, sum2014, sum2013, sum2012, sum2011, sum2010,
+  sum2009,sum2008 ,sum2007 ,sum2006,sum2005,sum2004,sum2003,sum2002,sum2001,sum2000, sum1999, sum1998, sum1997, sum1996,
+  sum1995, sum1994, sum1993,sum1992, sum1991, sum1990, sum1989, sum1988, sum1987, sum1986, sum1985, sum1984 ];
+
+features= features.reverse();
+//var dictionary = {'2020':sum2020.get('sum'),'2019':sum2019.get('sum')};
+
+// Create chart
+var chart = ui.Chart.feature.byFeature(features, 'year', ['sum']);
+chart.setChartType('BarChart');
+chart.setOptions(
+  {width: 400,
+  orientation: 'horizontal' , // or 'horizontal'
+  colors: ['red'],
+  height: 240,
+  title: 'Burn Scar Area (Acres)',
+  //colors: ['#e0440e', '#e6693e', '#ec8f6e', '#f3b49f', '#f6c7b6']
+});
+
+
+
+print(chart);

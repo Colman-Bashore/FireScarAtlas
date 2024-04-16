@@ -1,0 +1,1153 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var ic = ee.ImageCollection("users/cbashore/fires"),
+    WA_Burn_Sum = ee.Image("users/cbashore/WA_Burn_Sum"),
+    dec1 = ee.Image("users/cbashore/Decade_One"),
+    dec2 = ee.Image("users/cbashore/Decade_Two"),
+    dec3 = ee.Image("users/cbashore/Decade_Three"),
+    dec4 = ee.Image("users/cbashore/Decade_Four"),
+    LANDSAT = ee.ImageCollection("users/cbashore/LANDSAT");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+// Colman Bashore
+// Fire App
+// Visualization and Interactivity
+
+
+
+
+//  ----------------------------------------------------------------------------
+//  1. Initialize layout
+//  ----------------------------------------------------------------------------
+var palettes = require('users/gena/packages:palettes');
+var side_panel = ui.Panel({
+  style: {
+    width: '20%',
+  }
+});
+
+
+var map = ui.Map();
+ui.root.clear();
+ui.root.add(side_panel);
+ui.root.add(map);
+
+var FS = require("users/cbashore/fireapp:FireScars");
+FS = FS.FS;
+
+var pop = require("users/cbashore/fireapp:population");
+pop = pop.pop;
+// var animCol = ic
+//   .filterDate('2018-01-01', '2019-01-01');
+// var animation = animCol.getVideoThumbURL({dimension: '10x10'});	
+// print(animation);
+
+var basemap = require("users/cbashore/fireapp:basemap");
+basemap = basemap.basemap;
+//var darkGrey = basemap.darkGrey;
+
+map.centerObject(FS.washington, 7);
+map.setOptions('Dark Grey', {'Dark Grey': basemap.darkGrey});
+
+
+map.setControlVisibility({layerList: false, drawingToolsControl: false});
+
+
+
+//  ----------------------------------------------------------------------------
+//  2. Side Panel
+//  ----------------------------------------------------------------------------
+
+var title_style = {
+    fontSize: '24px', 
+    //fontFamily: 'serif',
+    fontWeight: 'bold',         // Use 'bold' for titles, otherwise you can comment out.
+    padding: '4px',            // Provides breathing room with css box model. Size in pixels as string ('4px')
+    //whiteSpace: 'pre',            // If you want to define line breaks manually with \n, otherwise comment this out.  
+    //backgroundColor: 'string'     // Default is white. Comment out if white works. Change if you want to add highlighter effect.
+  }
+;
+
+var title = ui.Label({
+  value: 'Washington Fire Scar Atlas',     //  Content of the label
+  style: title_style             //  Style defined in step above.
+  }
+);
+
+var name_style = {
+    fontSize: '12px', 
+    //fontFamily: 'serif',
+    fontWeight: 'bold',         // Use 'bold' for titles, otherwise you can comment out.
+    padding: '4px',            // Provides breathing room with css box model. Size in pixels as string ('4px')
+    //whiteSpace: 'pre',            // If you want to define line breaks manually with \n, otherwise comment this out.  
+    //backgroundColor: 'string'     // Default is white. Comment out if white works. Change if you want to add highlighter effect.
+  }
+;
+var name_label = ui.Label({
+  value: 'Created by Colman Bashore',     //  Content of the label
+  style: name_style             //  Style defined in step above.
+  }
+);
+
+var region_title_style = {
+    fontSize: '22px', 
+    //fontFamily: 'serif',
+    fontWeight: 'bold',         // Use 'bold' for titles, otherwise you can comment out.
+    padding: '4px',            // Provides breathing room with css box model. Size in pixels as string ('4px')
+    //whiteSpace: 'pre',            // If you want to define line breaks manually with \n, otherwise comment this out.  
+    //backgroundColor: '#FAD8BA'     // Default is white. Comment out if white works. Change if you want to add highlighter effect.
+    //color: ''
+  
+};
+
+//  Define style parameters for credits.
+var credits_style = {
+    fontSize: '10px',           // Size in unis pixels as string ('24px')
+    padding: '4px',            // Provides breathing room with css box model. Size in pixels as string ('4px')
+    whiteSpace: 'pre',          // If you want to define line breaks manually with \n, otherwise comment this out. 
+    color: 'black'
+  
+}
+;
+
+var credits = ui.Label({
+  value: 'Colman Bashore\nMiddlebury College\nData: Landsat, LandScan',     //  Content of the label
+  style: credits_style,             //  Style defined in step above.
+  
+  }
+);
+//credits.setUrl('https://github.com/Colman-Bashore/FireScarAtlas');
+
+var blurb_style = {
+    fontSize: '12px',           // Size in unis pixels as string ('24px')
+    padding: '4px',            // Provides breathing room with css box model. Size in pixels as string ('4px')
+    //backgroundColor: 'yellow'     // Default is white. Comment out if white works. Change if you want to add highlighter effect.
+
+}
+;
+
+var blurb_label = ui.Label({
+  value: 'This app documents the history of wildfires in Washington State through 40 years of burn scars derived from Landsat satellite imagery. The maps and charts in this app are designed to explore the spatial and temporal trends of fire in Washington. All burn scars were created based on a machine learning classification of 30-meter satellite imagery.',  
+  style: blurb_style             //  Style defined in step above.
+  }
+);
+
+var link_label = ui.Label({
+  value: 'Learn more about this project',
+  style: blurb_style
+});
+link_label.setUrl('https://github.com/Colman-Bashore/FireScarAtlas');
+
+var chart_intro = ui.Label({
+  value: 'The following chart illustrates the area of land burned every year expressed as a percentage above or below the 40-year median.',
+  style: blurb_style
+});
+var chart_blurb = ui.Label({
+  value: 'The general trends of this chart demonstrate an increase in acreage burned over the last several decades. The median burned area during this time was 54,000 acres based on the classifier-derived burn scars and clearly recent years have eclipsed that median. Toggle the recurring burns and most recent burns layers to explore general trends across the state on continue to a decade-by-decade analysis.',
+  style: blurb_style             //  Style defined in step above.
+  }
+);
+
+side_panel
+  .add(title)
+  //.add(name_label)
+  .add(blurb_label)
+  .add(link_label)
+;
+
+var notes_style = {
+    fontSize: '12px', 
+    fontWeight: 'bold',
+    padding: '4px',            // Provides breathing room with css box model. Size in pixels as string ('4px')
+    //backgroundColor: 'yellow'     // Default is white. Comment out if white works. Change if you want to add highlighter effect.
+
+}
+;
+var notes_label = ui.Label({
+  value: 'Compare Burn Scars by Decade:',  
+  style: notes_style             //  Style defined in step above.
+  }
+);
+
+var reference_label = ui.Label({
+  value: 'Reference Layers:',  
+  style: notes_style             //  Style defined in step above.
+  }
+);
+
+var legend_label = ui.Label({
+  value: '',  
+  style: notes_style             //  Style defined in step above.
+  }
+);
+
+//  ----------------------------------------------------------------------------
+//  3. Create Layers
+//  ----------------------------------------------------------------------------
+
+var yr1984 = ic.filterDate('1984-01-01', '1984-12-31').first();
+var yr1985 = ic.filterDate('1985-01-01', '1985-12-31').first();
+var yr1986 = ic.filterDate('1986-01-01', '1986-12-31').first();
+var yr1987 = ic.filterDate('1987-01-01', '1987-12-31').first();
+var yr1988 = ic.filterDate('1988-01-01', '1988-12-31').first();
+var yr1989 = ic.filterDate('1989-01-01', '1989-12-31').first();
+
+var yr1990 = ic.filterDate('1990-01-01', '1990-12-31').first();
+var yr1991 = ic.filterDate('1991-01-01', '1991-12-31').first();
+var yr1992 = ic.filterDate('1992-01-01', '1992-12-31').first();
+var yr1993 = ic.filterDate('1993-01-01', '1993-12-31').first();
+var yr1994 = ic.filterDate('1994-01-01', '1994-12-31').first();
+var yr1995 = ic.filterDate('1995-01-01', '1995-12-31').first();
+var yr1996 = ic.filterDate('1996-01-01', '1996-12-31').first();
+var yr1997 = ic.filterDate('1997-01-01', '1997-12-31').first();
+var yr1998 = ic.filterDate('1998-01-01', '1998-12-31').first();
+var yr1999 = ic.filterDate('1999-01-01', '1999-12-31').first();
+var yr2000 = ic.filterDate('2000-01-01', '2000-12-31').first();
+var yr2001 = ic.filterDate('2001-01-01', '2001-12-31').first();
+var yr2002 = ic.filterDate('2002-01-01', '2002-12-31').first();
+var yr2003 = ic.filterDate('2003-01-01', '2003-12-31').first();
+var yr2004 = ic.filterDate('2004-01-01', '2004-12-31').first();
+var yr2005 = ic.filterDate('2005-01-01', '2005-12-31').first();
+var yr2006 = ic.filterDate('2006-01-01', '2006-12-31').first();
+var yr2007 = ic.filterDate('2007-01-01', '2007-12-31').first();
+var yr2008 = ic.filterDate('2008-01-01', '2008-12-31').first();
+var yr2009 = ic.filterDate('2009-01-01', '2009-12-31').first();
+var yr2010 = ic.filterDate('2010-01-01', '2010-12-31').first();
+var yr2011 = ic.filterDate('2011-01-01', '2011-12-31').first();
+var yr2012 = ic.filterDate('2012-01-01', '2012-12-31').first();
+var yr2013 = ic.filterDate('2013-01-01', '2013-12-31').first();
+var yr2014 = ic.filterDate('2014-01-01', '2014-12-31').first();
+var yr2015 = ic.filterDate('2015-01-01', '2015-12-31').first();
+var yr2016 = ic.filterDate('2016-01-01', '2016-12-31').first();
+var yr2017 = ic.filterDate('2017-01-01', '2017-12-31').first();
+var yr2018 = ic.filterDate('2018-01-01', '2018-12-31').first();
+var yr2019 = ic.filterDate('2019-01-01', '2019-12-31').first();
+var yr2020 = ic.filterDate('2020-01-01', '2020-12-31').first();
+var yr2021 = ic.filterDate('2021-01-01', '2021-12-31').first();
+var yr2022 = ic.filterDate('2022-01-01', '2022-12-31').first();
+var yr2023 = ic.filterDate('2023-01-01', '2023-12-31').first();
+
+
+var l1984 = ui.Map.Layer(yr1984.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1985 = ui.Map.Layer(yr1985.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1986 = ui.Map.Layer(yr1986.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1987 = ui.Map.Layer(yr1987.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1988 = ui.Map.Layer(yr1988.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1989 = ui.Map.Layer(yr1989.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1990 = ui.Map.Layer(yr1990.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1991 = ui.Map.Layer(yr1991.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1992 = ui.Map.Layer(yr1992.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1993 = ui.Map.Layer(yr1993.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1994 = ui.Map.Layer(yr1994.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1995 = ui.Map.Layer(yr1995.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1996 = ui.Map.Layer(yr1996.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1997 = ui.Map.Layer(yr1997.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1998 = ui.Map.Layer(yr1998.selfMask(), {min: 1, max:1, palette:['purple']});
+var l1999 = ui.Map.Layer(yr1999.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2000 = ui.Map.Layer(yr2000.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2001 = ui.Map.Layer(yr2001.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2002 = ui.Map.Layer(yr2002.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2003 = ui.Map.Layer(yr2003.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2004 = ui.Map.Layer(yr2004.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2005 = ui.Map.Layer(yr2005.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2006 = ui.Map.Layer(yr2006.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2007 = ui.Map.Layer(yr2007.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2008 = ui.Map.Layer(yr2008.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2009 = ui.Map.Layer(yr2009.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2010 = ui.Map.Layer(yr2010.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2011 = ui.Map.Layer(yr2011.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2012 = ui.Map.Layer(yr2012.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2013 = ui.Map.Layer(yr2013.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2014 = ui.Map.Layer(yr2014.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2015 = ui.Map.Layer(yr2015.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2016 = ui.Map.Layer(yr2016.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2017 = ui.Map.Layer(yr2017.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2018 = ui.Map.Layer(yr2018.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2019 = ui.Map.Layer(yr2019.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2020 = ui.Map.Layer(yr2020.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2021 = ui.Map.Layer(yr2021.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2022 = ui.Map.Layer(yr2022.selfMask(), {min: 1, max:1, palette:['purple']});
+var l2023 = ui.Map.Layer(yr2023.selfMask(), {min: 1, max:1, palette:['purple']});
+
+// Create Recurring Burn Layer
+var sum_palette = palettes.matplotlib.magma[7].slice(2,7);
+
+var sum_vis = {min:1, max:5, palette: sum_palette};
+var burnSum = ui.Map.Layer(WA_Burn_Sum.selfMask(), sum_vis, 'BurnSum');
+
+// Create Most Recent Burn Layer
+var MR = require("users/cbashore/fireapp:MostRecent");
+MR = MR.MR;
+
+var recent_viz = {min:1985, max:2023, palette:['#1f618d', '#276894', '#2f709b', '#3777a2', '#3e7fa9', '#4686b0', '#4e8db7', '#5695bf', '#5e9cc6', '#66a3cd', '#6dabd4', '#75b2db', '#7dbae2', '#85c1e9', '#8ec2df', '#98c3d5', '#a1c4cb', '#abc4c1', '#b4c5b7', '#bdc6ad', '#c7c7a2', '#d0c898', '#d9c98e', '#e3c984', '#ecca7a', '#f6cb70', '#ffcc66', '#ffc464', '#ffbc61', '#ffb45f', '#ffac5c', '#ffa45a', '#ff9c58', '#ff9355', '#ff8b53', '#ff8351', '#ff7b4e', '#ff734c', '#ff6b49', '#ff6347']};
+var recent = ui.Map.Layer(MR.recent.selfMask(), recent_viz,'' ,0);
+
+// Create Decade Layers
+
+var decade1 = ui.Map.Layer(dec1.selfMask(), {palette:['#1f618d']},'' ,1);
+var decade2 = ui.Map.Layer(dec2.selfMask(), {palette: ['#85c1e9']}, '', 1);
+var decade3 = ui.Map.Layer(dec3.selfMask(), {palette: ['#ffcc66']}, '', 1);
+var decade4 = ui.Map.Layer(dec4.selfMask(), {palette: ['#ff6347']}, '', 1);
+
+var decadeList = {'1984-1993':decade1};
+
+// Create Population Layer
+var pop_vis = {min:0, max:15,palette: palettes.cmocean.Tempo[7]};
+var population = ui.Map.Layer(pop.wa, pop_vis, 'pop', 0);
+
+// Imagery Viz Params
+
+var NBR_vis = {bands: ['NBR'], palette:['Red','White','Green'],min: -0.75, max: 0.75};
+
+var landsat_vis = {
+    bands: ['R', 'G', 'B'],
+    min: 7000,
+    max: 12000
+};
+
+// Create NBR layers
+var nbr1984 = ui.Map.Layer(FS.yr1984_img, NBR_vis, 'nbr', 0);
+var nbr1985 = ui.Map.Layer(FS.yr1985_img, NBR_vis, 'nbr', 0);
+var nbr1986 = ui.Map.Layer(FS.yr1986_img, NBR_vis, 'nbr', 0);
+var nbr1987 = ui.Map.Layer(FS.yr1987_img, NBR_vis, 'nbr', 0);
+var nbr1988 = ui.Map.Layer(FS.yr1988_img, NBR_vis, 'nbr', 0);
+var nbr1989 = ui.Map.Layer(FS.yr1989_img, NBR_vis, 'nbr', 0);
+var nbr1990 = ui.Map.Layer(FS.yr1990_img, NBR_vis, 'nbr', 0);
+var nbr1991 = ui.Map.Layer(FS.yr1991_img, NBR_vis, 'nbr', 0);
+var nbr1992 = ui.Map.Layer(FS.yr1992_img, NBR_vis, 'nbr', 0);
+var nbr1993 = ui.Map.Layer(FS.yr1993_img, NBR_vis, 'nbr', 0);
+var nbr1994 = ui.Map.Layer(FS.yr1994_img, NBR_vis, 'nbr', 0);
+var nbr1995 = ui.Map.Layer(FS.yr1995_img, NBR_vis, 'nbr', 0);
+var nbr1996 = ui.Map.Layer(FS.yr1996_img, NBR_vis, 'nbr', 0);
+var nbr1997 = ui.Map.Layer(FS.yr1997_img, NBR_vis, 'nbr', 0);
+var nbr1998 = ui.Map.Layer(FS.yr1998_img, NBR_vis, 'nbr', 0);
+var nbr1999 = ui.Map.Layer(FS.yr1999_img, NBR_vis, 'nbr', 0);
+var nbr2000 = ui.Map.Layer(FS.yr2000_img, NBR_vis, 'nbr', 0);
+var nbr2001 = ui.Map.Layer(FS.yr2001_img, NBR_vis, 'nbr', 0);
+var nbr2002 = ui.Map.Layer(FS.yr2002_img, NBR_vis, 'nbr', 0);
+var nbr2003 = ui.Map.Layer(FS.yr2003_img, NBR_vis, 'nbr', 0);
+var nbr2004 = ui.Map.Layer(FS.yr2004_img, NBR_vis, 'nbr', 0);
+var nbr2005 = ui.Map.Layer(FS.yr2005_img, NBR_vis, 'nbr', 0);
+var nbr2006 = ui.Map.Layer(FS.yr2006_img, NBR_vis, 'nbr', 0);
+var nbr2007 = ui.Map.Layer(FS.yr2007_img, NBR_vis, 'nbr', 0);
+var nbr2008 = ui.Map.Layer(FS.yr2008_img, NBR_vis, 'nbr', 0);
+var nbr2009 = ui.Map.Layer(FS.yr2009_img, NBR_vis, 'nbr', 0);
+var nbr2010 = ui.Map.Layer(FS.yr2010_img, NBR_vis, 'nbr', 0);
+var nbr2011 = ui.Map.Layer(FS.yr2011_img, NBR_vis, 'nbr', 0);
+var nbr2012 = ui.Map.Layer(FS.yr2012_img, NBR_vis, 'nbr', 0);
+var nbr2013 = ui.Map.Layer(FS.yr2013_img, NBR_vis, 'nbr', 0);
+var nbr2014 = ui.Map.Layer(FS.yr2014_img, NBR_vis, 'nbr', 0);
+var nbr2015 = ui.Map.Layer(FS.yr2015_img, NBR_vis, 'nbr', 0);
+var nbr2016 = ui.Map.Layer(FS.yr2016_img, NBR_vis, 'nbr', 0);
+var nbr2017 = ui.Map.Layer(FS.yr2017_img, NBR_vis, 'nbr', 0);
+var nbr2018 = ui.Map.Layer(FS.yr2018_img, NBR_vis, 'nbr', 0);
+var nbr2019 = ui.Map.Layer(FS.yr2019_img, NBR_vis, 'nbr', 0);
+var nbr2020 = ui.Map.Layer(FS.yr2020_img, NBR_vis, 'nbr', 0);
+var nbr2021 = ui.Map.Layer(FS.yr2021_img, NBR_vis, 'nbr', 0);
+var nbr2022 = ui.Map.Layer(FS.yr2022_img, NBR_vis, 'nbr', 0);
+var nbr2023 = ui.Map.Layer(FS.yr2023_img, NBR_vis, 'nbr', 0);
+
+// Create LANDSAT image layers
+var img1984 = ui.Map.Layer(FS.yr1984_img, landsat_vis, 'landsat', 0);
+var img1985 = ui.Map.Layer(FS.yr1985_img, landsat_vis, 'landsat', 0);
+var img1986 = ui.Map.Layer(FS.yr1986_img, landsat_vis, 'landsat', 0);
+var img1987 = ui.Map.Layer(FS.yr1987_img, landsat_vis, 'landsat', 0);
+var img1988 = ui.Map.Layer(FS.yr1988_img, landsat_vis, 'landsat', 0);
+var img1989 = ui.Map.Layer(FS.yr1989_img, landsat_vis, 'landsat', 0);
+var img1990 = ui.Map.Layer(FS.yr1990_img, landsat_vis, 'landsat', 0);
+var img1991 = ui.Map.Layer(FS.yr1991_img, landsat_vis, 'landsat', 0);
+var img1992 = ui.Map.Layer(FS.yr1992_img, landsat_vis, 'landsat', 0);
+var img1993 = ui.Map.Layer(FS.yr1993_img, landsat_vis, 'landsat', 0);
+var img1994 = ui.Map.Layer(FS.yr1994_img, landsat_vis, 'landsat', 0);
+var img1995 = ui.Map.Layer(FS.yr1995_img, landsat_vis, 'landsat', 0);
+var img1996 = ui.Map.Layer(FS.yr1996_img, landsat_vis, 'landsat', 0);
+var img1997 = ui.Map.Layer(FS.yr1997_img, landsat_vis, 'landsat', 0);
+var img1998 = ui.Map.Layer(FS.yr1998_img, landsat_vis, 'landsat', 0);
+var img1999 = ui.Map.Layer(FS.yr1999_img, landsat_vis, 'landsat', 0);
+var img2000 = ui.Map.Layer(FS.yr2000_img, landsat_vis, 'landsat', 0);
+var img2001 = ui.Map.Layer(FS.yr2001_img, landsat_vis, 'landsat', 0);
+var img2002 = ui.Map.Layer(FS.yr2002_img, landsat_vis, 'landsat', 0);
+var img2003 = ui.Map.Layer(FS.yr2003_img, landsat_vis, 'landsat', 0);
+var img2004 = ui.Map.Layer(FS.yr2004_img, landsat_vis, 'landsat', 0);
+var img2005 = ui.Map.Layer(FS.yr2005_img, landsat_vis, 'landsat', 0);
+var img2006 = ui.Map.Layer(FS.yr2006_img, landsat_vis, 'landsat', 0);
+var img2007 = ui.Map.Layer(FS.yr2007_img, landsat_vis, 'landsat', 0);
+var img2008 = ui.Map.Layer(FS.yr2008_img, landsat_vis, 'landsat', 0);
+var img2009 = ui.Map.Layer(FS.yr2009_img, landsat_vis, 'landsat', 0);
+var img2010 = ui.Map.Layer(FS.yr2010_img, landsat_vis, 'landsat', 0);
+var img2011 = ui.Map.Layer(FS.yr2011_img, landsat_vis, 'landsat', 0);
+var img2012 = ui.Map.Layer(FS.yr2012_img, landsat_vis, 'landsat', 0);
+var img2013 = ui.Map.Layer(FS.yr2013_img, landsat_vis, 'landsat', 0);
+var img2014 = ui.Map.Layer(FS.yr2014_img, landsat_vis, 'landsat', 0);
+var img2015 = ui.Map.Layer(FS.yr2015_img, landsat_vis, 'landsat', 0);
+var img2016 = ui.Map.Layer(FS.yr2016_img, landsat_vis, 'landsat', 0);
+var img2017 = ui.Map.Layer(FS.yr2017_img, landsat_vis, 'landsat', 0);
+var img2018 = ui.Map.Layer(FS.yr2018_img, landsat_vis, 'landsat', 0);
+var img2019 = ui.Map.Layer(FS.yr2019_img, landsat_vis, 'landsat', 0);
+var img2020 = ui.Map.Layer(FS.yr2020_img, landsat_vis, 'landsat', 0);
+var img2021 = ui.Map.Layer(FS.yr2021_img, landsat_vis, 'landsat', 0);
+var img2022 = ui.Map.Layer(FS.yr2022_img, landsat_vis, 'landsat', 0);
+var img2023 = ui.Map.Layer(FS.yr2023_img, landsat_vis, 'landsat', 0);
+
+
+// Create yearly layers lists
+
+var layersList = {
+  '2023': [l2023, l2022, l2021, nbr2023, img2023],
+  '2022': [l2022, l2021, l2020, nbr2022, img2022],
+  '2021': [l2021, l2020, l2019, nbr2021, img2021],
+  '2020': [l2020, l2019, l2018, nbr2020, img2020],
+  '2019': [l2019, l2018, l2017, nbr2019, img2019],
+  '2018': [l2018, l2017, l2016, nbr2018, img2018],
+  '2017': [l2017, l2016, l2015, nbr2017, img2017],
+  '2016': [l2016, l2015, l2014, nbr2016, img2016],
+  '2015': [l2015, l2014, l2013, nbr2015, img2015],
+  '2014': [l2014, l2013, l2012, nbr2014, img2014],
+  '2013': [l2013, l2012, l2011, nbr2013, img2013],
+  '2012': [l2012, l2011, l2010, nbr2012, img2012],
+  '2011': [l2011, l2010, l2009, nbr2011, img2011],
+  '2010': [l2010, l2009, l2008, nbr2010, img2010],
+  '2009': [l2009, l2008, l2007, nbr2009, img2009],
+  '2008': [l2008, l2007, l2006, nbr2008, img2008],
+  '2007': [l2007, l2006, l2005, nbr2007, img2007],
+  '2006': [l2006, l2005, l2004, nbr2006, img2006],
+  '2005': [l2005, l2004, l2003, nbr2005, img2005],
+  '2004': [l2004, l2003, l2002, nbr2004, img2004],
+  '2003': [l2003, l2002, l2001, nbr2003, img2003],
+  '2002': [l2002, l2001, l2000, nbr2002, img2002],
+  '2001': [l2001, l2000, l1999, nbr2001, img2001],
+  '2000': [l2000, l1999, l1998, nbr2000, img2000],
+  '1999': [l1999, l1998, l1997, nbr1999, img1999],
+  '1998': [l1998, l1997, l1996, nbr1998, img1998],
+  '1997': [l1997, l1996, l1995, nbr1997, img1997],
+  '1996': [l1996, l1995, l1994, nbr1996, img1996],
+  '1995': [l1995, l1994, l1993, nbr1995, img1995],
+  '1994': [l1994, l1993, l1992, nbr1994, img1994],
+  '1993': [l1993, l1992, l1991, nbr1993, img1993],
+  '1992': [l1992, l1991, l1990, nbr1992, img1992],
+  '1991': [l1991, l1990, l1989, nbr1991, img1991],
+  '1990': [l1990, l1989, l1988, nbr1990, img1990],
+  '1989': [l1989, l1988, l1987, nbr1989, img1989],
+  '1988': [l1988, l1987, l1986, nbr1988, img1988],
+  '1987': [l1987, l1986, l1985, nbr1987, img1987],
+  '1986': [l1986, l1985, l1984, nbr1986, img1986],
+  '1985': [l1985, l1984, l1984, nbr1985, img1985],
+  '1984': [l1984, l1984, l1984, nbr1984, img1984]
+};
+//  ----------------------------------------------------------------------------
+//  4 MAKE CHART
+//  ----------------------------------------------------------------------------
+
+
+var zonalStat = function(img, year){
+  var sumFc = img.unmask().reduceRegions({
+    collection: FS.washington,
+    reducer: ee.Reducer.sum(),
+    scale: 30});
+  var sumYr = ee.Feature(sumFc.first());
+  var sum = ee.Number(sumYr.get('sum'));
+  var acres = (sum.multiply(900).divide(4047));
+  sumYr = sumYr.set('sum', acres).set('year',year);
+  var anom = (acres.subtract(54978.28)).divide(54978.28).multiply(100);
+  var anomYr = sumYr.set('Anomaly',anom);
+  return anomYr;
+};
+var sum2023 = zonalStat(yr2023, '2023');
+var sum2022 = zonalStat(yr2022, '2022');
+var sum2021 = zonalStat(yr2021, '2021');
+
+var sum2020 = zonalStat(yr2020, '2020');
+var sum2019= zonalStat(yr2019, '2019');
+var sum2018= zonalStat(yr2018, '2018');
+var sum2017= zonalStat(yr2017, '2017');
+var sum2016= zonalStat(yr2016, '2016');
+var sum2015= zonalStat(yr2015, '2015');
+var sum2014= zonalStat(yr2014, '2014');
+var sum2013= zonalStat(yr2013, '2013');
+var sum2012= zonalStat(yr2012, '2012');
+var sum2011= zonalStat(yr2011, '2011');
+var sum2010= zonalStat(yr2010, '2010');
+var sum2009= zonalStat(yr2009, '2009');
+var sum2008= zonalStat(yr2008, '2008');
+var sum2007= zonalStat(yr2007, '2007');
+var sum2006= zonalStat(yr2006, '2006');
+var sum2005= zonalStat(yr2005, '2005');
+var sum2004= zonalStat(yr2004, '2004');
+var sum2003= zonalStat(yr2003, '2003');
+var sum2002= zonalStat(yr2002, '2002');
+var sum2001= zonalStat(yr2001, '2001');
+var sum2000= zonalStat(yr2000, '2000');
+var sum1999= zonalStat(yr1999, '1999');
+var sum1998= zonalStat(yr1998, '1998');
+var sum1997= zonalStat(yr1997, '1997');
+var sum1996= zonalStat(yr1996, '1996');
+var sum1995= zonalStat(yr1995, '1995');
+var sum1994= zonalStat(yr1994, '1994');
+var sum1993= zonalStat(yr1993, '1993');
+var sum1992= zonalStat(yr1992, '1992');
+var sum1991= zonalStat(yr1991, '1991');
+var sum1990= zonalStat(yr1990, '1990');
+var sum1989= zonalStat(yr1989, '1989');
+var sum1988= zonalStat(yr1988, '1988');
+var sum1987= zonalStat(yr1987, '1987');
+var sum1986= zonalStat(yr1986, '1986');
+var sum1985= zonalStat(yr1985, '1985');
+var sum1984= zonalStat(yr1984, '1984');
+
+// Create chart
+
+var features = [sum2023, sum2022, sum2021, sum2020,sum2019,sum2018,sum2017, sum2016, sum2015, sum2014, sum2013, sum2012, sum2011, sum2010,
+  sum2009,sum2008 ,sum2007 ,sum2006,sum2005,sum2004,sum2003,sum2002,sum2001,sum2000, sum1999, sum1998, sum1997, sum1996,
+  sum1995, sum1994, sum1993,sum1992, sum1991, sum1990, sum1989, sum1988, sum1987, sum1986, sum1985, sum1984 ];
+
+features= features.reverse();
+//var dictionary = {'2020':sum2020.get('sum'),'2019':sum2019.get('sum')};
+
+
+var chart = ui.Chart.feature.byFeature(features, 'year', ['Anomaly']);
+chart.setChartType('BarChart');
+chart.setOptions(
+  {width: 400,
+  orientation: 'horizontal' , // or 'horizontal'
+  colors: ['#bc3754'],
+  height: 240,
+  title: 'Burn Scar Area (Percent Difference from Median)',
+  series: {
+    0: {visibleInLegend: false},  // hides the 1st series in the legend
+  },
+  vAxis: {  // y-axis
+    viewWindow: {min: -100, max: 1000}
+  }
+});
+
+
+side_panel
+  .add(chart_intro)
+  .add(chart)
+  .add(chart_blurb);
+
+
+
+
+//  ----------------------------------------------------------------------------
+//  5. Add Layers
+//  ----------------------------------------------------------------------------
+
+
+var layers = map.layers();
+layers.add(burnSum);
+layers.add(recent);
+//layers.add(layer2020);
+
+// Load cart module.
+
+var cart = require('users/jhowarth/eePrimer:modules/cart.js');
+
+// Construct gradient legend.
+
+var sum_legend = cart                                                     // module
+  .makeGradientLegend(                                                // function
+    sum_vis,                                                       // viz parameters
+    'Recurring Burns from 1984 to 2023',                                                   // legend title
+    'bottom-left'                                                     // position on map
+  );
+
+
+var recent_legend = cart                                                     // module
+  .makeGradientLegend(                                                // function
+    recent_viz,                                                       // viz parameters
+    'Most Recent Year Burned',                                                   // legend title
+    'bottom-left'                                                     // position on map
+  );
+
+
+
+var recentCheckbox = ui.Checkbox('Show Most Recent Burn Layer', false);
+
+recentCheckbox.onChange(function(checked) {
+  // Shows or hides the first map layer based on the checkbox's value.
+  map.layers().get(1).setShown(checked);
+});
+
+side_panel.add(recentCheckbox);
+
+
+
+var sumCheckbox = ui.Checkbox('Show Recurring Burns Layer', true);
+
+sumCheckbox.onChange(function(checked) {
+  // Shows or hides the first map layer based on the checkbox's value.
+  map.layers().get(0).setShown(checked);
+});
+
+side_panel.add(recent_legend);
+side_panel.add(legend_label);
+side_panel.add(sumCheckbox);
+
+side_panel.add(sum_legend);
+
+
+
+//  ----------------------------------------------------------------------------
+//  5 widgets for year layers
+//  ----------------------------------------------------------------------------
+
+var button_panel = ui.Panel({
+  layout: ui.Panel.Layout.flow('horizontal'),
+  style: {width: '300px'}
+});
+
+
+var yrSelect = ui.Select({
+  items: Object.keys(layersList).reverse(),
+  onChange: function(key) {
+    //map.add(layersList[key]);
+    layers.set(11, null);
+    layers.set(10, null);
+    layers.set(9, null);
+    layers.set(8, null);
+    layers.set(7, null);
+    layers.set(6, null);
+    layers.set(11,layersList[key][0]);
+    layers.set(10,layersList[key][1]);
+    layers.set(9,layersList[key][2]);
+    layers.set(8,layersList[key][3]);
+    layers.set(7,layersList[key][4]);
+    layers.set(6,population);
+    map.layers().get(9).setOpacity(0.5);
+    map.layers().get(10).setOpacity(0.5);
+    map.layers().get(11).setOpacity(1);
+  }
+});
+
+// Set a place holder.
+yrSelect.setPlaceholder('Pick a year...');
+
+//side_panel.add(yrSelect);
+
+
+var bsCheckbox = ui.Checkbox('Burn Scars', true);
+
+bsCheckbox.onChange(function(checked) {
+  // Shows or hides the first map layer based on the checkbox's value.
+  map.layers().get(9).setShown(checked);
+  map.layers().get(10).setShown(checked);
+  map.layers().get(11).setShown(checked);
+  
+});
+
+
+
+
+var nbr_legend = cart                                                     // module
+  .makeGradientLegend(                                                // function
+    NBR_vis,                                                       // viz parameters
+    'Normalized Burn Ratio' ,                                                  // legend title
+    'bottom-left'                                                     // position on map
+  );
+
+var pop_legend = cart                                                     // module
+  .makeGradientLegend(                                                // function
+    pop_vis,                                                       // viz parameters
+    'Population Density' ,                                                  // legend title
+    'bottom-left'                                                     // position on map
+  );
+
+var nbrCheckbox = ui.Checkbox('Normalized Burn Ratio', false);
+
+nbrCheckbox.onChange(function(checked) {
+  // Shows or hides the first map layer based on the checkbox's value.
+  map.layers().get(8).setShown(checked);
+  //map.add(nbr_legend);
+  
+});
+
+
+var imgCheckbox = ui.Checkbox('LANDSAT Natural Color Image', false);
+
+imgCheckbox.onChange(function(checked) {
+  // Shows or hides the first map layer based on the checkbox's value.
+  map.layers().get(7).setShown(checked);
+});
+
+var popCheckbox = ui.Checkbox('Population', false);
+
+popCheckbox.onChange(function(checked) {
+  map.layers().get(6).setShown(checked);
+
+});
+
+//  Construct legend-burn scars 
+
+var burn_labels = ['Current Year Burn','Previous Two Years'];
+var burn_palette = ['#75147C','#B888BB'];
+
+var burn_legend = cart.makeLegend(
+  'Burn Scars',                         // Label for legend
+  burn_palette,                                // Palette for image  
+  burn_labels,                     // labels to display for each color                  
+  'bottom-left'                           // Where you want to put legend on the map.
+);
+
+
+//  ----------------------------------------------------------------------------
+//  5.5 - Return Home
+//  ----------------------------------------------------------------------------
+var homeButton = ui.Button({
+  label: 'Home',
+  //style: {position: 'bottom-right'},
+  onClick: function() {
+    side_panel.clear();
+    side_panel.add(title);
+    side_panel.add(blurb_label);
+    side_panel.add(link_label);
+    side_panel.add(chart_intro);
+    side_panel.add(chart);
+    side_panel.add(chart_blurb);
+    map.centerObject(FS.washington, 7);
+    map.layers().get(0).setShown(1);
+    map.layers().get(1).setShown(0);
+    map.layers().get(2).setShown(0);
+    map.layers().get(3).setShown(0);
+    map.layers().get(4).setShown(0);
+    map.layers().get(5).setShown(0);
+    map.layers().get(6).setShown(0);
+    map.layers().get(7).setShown(0);
+    map.layers().get(8).setShown(0);
+    map.layers().get(9).setShown(0);
+    map.layers().get(10).setShown(0);
+    map.layers().get(11).setShown(0);
+    
+    side_panel.add(recentCheckbox);
+    side_panel.add(recent_legend);
+    side_panel.add(legend_label);
+    side_panel.add(sumCheckbox);
+    side_panel.add(sum_legend);
+    side_panel.add(button_panel);
+    button_panel.clear();
+    button_panel.add(decButton);
+    side_panel.add(credits);
+
+  }
+});
+
+var homeBack = ui.Button({
+  label: 'Back',
+  //style: {position: 'bottom-left'},
+  onClick: function() {
+    side_panel.clear();
+    side_panel.add(title);
+    side_panel.add(blurb_label);
+    side_panel.add(link_label);
+    side_panel.add(chart_intro);
+    side_panel.add(chart);
+    side_panel.add(chart_blurb);
+    map.centerObject(FS.washington, 7);
+    map.layers().get(0).setShown(1);
+    map.layers().get(1).setShown(0);
+    map.layers().get(2).setShown(0);
+    map.layers().get(3).setShown(0);
+    map.layers().get(4).setShown(0);
+    layers.set(6, null).set(7, null).set(8, null).set(9, null).set(10, null).set(11, null);
+    map.layers().get(5).setShown(0);
+    map.layers().get(6).setShown(0);
+    map.layers().get(7).setShown(0);
+    map.layers().get(8).setShown(0);
+    map.layers().get(9).setShown(0);
+    map.layers().get(10).setShown(0);
+    map.layers().get(11).setShown(0);
+    
+    side_panel.add(recentCheckbox);
+    side_panel.add(recent_legend);
+    side_panel.add(legend_label);
+    side_panel.add(sumCheckbox);
+    side_panel.add(sum_legend);
+    side_panel.add(button_panel);
+    button_panel.clear();
+    button_panel.add(decButton);
+    side_panel.add(credits);
+
+  }
+});
+
+//  ----------------------------------------------------------------------------
+//  5.4 - Columbia
+//  ----------------------------------------------------------------------------
+
+var col_label = ui.Label({
+  value: 'Columbia Region',  
+  style: region_title_style            //  Style defined in step above.
+  }
+);
+
+var col_blurb = ui.Label({
+  value: 'The area surrounding the Columbia River in south-central Washington has been the subject of many seasons of fire. A drier - less forested area than the North Cascades, this region is primarily agricultural. However, high winds in the foothills and gulches surrounding the river have stoked many large blazes over the years.',  
+  style: blurb_style            //  Style defined in step above.
+  }
+);
+
+var colButton = ui.Button({
+  label: 'Next',
+  //style: {position: 'bottom-right'},
+  onClick: function() {
+    side_panel.clear();
+    //side_panel.add(title);
+    side_panel.add(col_label);
+    side_panel.add(col_blurb);
+    map.remove(decade_legend);
+    map.layers().get(0).setShown(0);
+    map.layers().get(1).setShown(0);
+    map.layers().get(2).setShown(0);
+    map.layers().get(3).setShown(0);
+    map.layers().get(4).setShown(0);
+    map.layers().get(5).setShown(0);
+    //layers.add(img2020).add(nbr2020).add(l2018).add(l2019).add(l2020);
+    map.layers().get(9).setOpacity(0.5);
+    map.layers().get(10).setOpacity(0.5);
+    //map.setOptions('HYBRID');
+    //map.setCenter(-119.8118781622336,48.5044095386756, 7);
+    map.setCenter(-119.7012319474875,46.4835398465138, 9);
+    side_panel.add(bsCheckbox).add(yrSelect);
+    side_panel.add(reference_label).add(nbrCheckbox).add(imgCheckbox).add(popCheckbox);
+    side_panel.add(legend_label).add(burn_legend);
+    side_panel.add(nbr_legend).add(pop_legend);
+    side_panel.add(button_panel);
+    button_panel.clear();
+    button_panel.add(cgcBack).add(homeButton);
+    side_panel.add(credits);
+  }
+});
+
+
+//  ----------------------------------------------------------------------------
+//  5.3 - Chelan-Grand Coulee
+//  ----------------------------------------------------------------------------
+
+var cgc_label = ui.Label({
+  value: 'Chelan - Grand Coulee Region',  
+  style: region_title_style            //  Style defined in step above.
+  }
+);
+var cgc_blurb = ui.Label({
+  value: "The Chelan - Grand Coulee Region is both the primary center of Washington's fruit industry and also a major area for tourism around Lake Chelan. In recent years the area surrounding Lake Chelan has become a hot spot for fires while the lake itself continues to be a highly visited location surrounded by expensive homes.",  
+  style: blurb_style            //  Style defined in step above.
+  }
+);
+
+
+var cgcButton = ui.Button({
+  label: 'Next',
+  //style: {position: 'bottom-right'},
+  onClick: function() {
+    side_panel.clear();
+    //side_panel.add(title);
+    side_panel.add(cgc_label).add(cgc_blurb);
+    //map.remove(decade_legend);
+    map.layers().get(0).setShown(0);
+    map.layers().get(1).setShown(0);
+    map.layers().get(2).setShown(0);
+    map.layers().get(3).setShown(0);
+    map.layers().get(4).setShown(0);
+    map.layers().get(5).setShown(0);
+
+    //layers.add(img2020).add(nbr2020).add(l2018).add(l2019).add(l2020);
+    map.layers().get(9).setOpacity(0.5);
+    map.layers().get(10).setOpacity(0.5);
+    //map.setOptions('HYBRID');
+    //map.setCenter(-119.8118781622336,48.5044095386756, 7);
+    map.setCenter(-119.51216205041406,47.641886939691005, 9);
+    side_panel.add(bsCheckbox).add(yrSelect);
+    
+    side_panel.add(reference_label).add(nbrCheckbox).add(imgCheckbox).add(popCheckbox);
+    side_panel.add(legend_label).add(burn_legend);
+    side_panel.add(nbr_legend).add(pop_legend);
+    side_panel.add(button_panel);
+    button_panel.clear();
+    button_panel.add(ncBack).add(colButton);
+    side_panel.add(credits);
+  }
+});
+
+var cgcBack = ui.Button({
+  label: 'Back',
+  //style: {position: 'bottom-left'},
+  onClick: function() {
+    side_panel.clear();
+    //side_panel.add(title);
+    side_panel.add(cgc_label).add(cgc_blurb);
+    //map.remove(decade_legend);
+    map.layers().get(0).setShown(0);
+    map.layers().get(1).setShown(0);
+    map.layers().get(2).setShown(0);
+    map.layers().get(3).setShown(0);
+    map.layers().get(4).setShown(0);
+    map.layers().get(5).setShown(0);
+
+    //layers.add(img2020).add(nbr2020).add(l2018).add(l2019).add(l2020);
+    map.layers().get(9).setOpacity(0.5);
+    map.layers().get(10).setOpacity(0.5);
+    //map.setOptions('HYBRID');
+    //map.setCenter(-119.8118781622336,48.5044095386756, 7);
+    map.setCenter(-119.51216205041406,47.641886939691005, 9);
+    side_panel.add(bsCheckbox).add(yrSelect);
+    
+    side_panel.add(reference_label).add(nbrCheckbox).add(imgCheckbox).add(popCheckbox);
+    side_panel.add(legend_label).add(burn_legend);
+    side_panel.add(nbr_legend).add(pop_legend);
+    side_panel.add(button_panel);
+    button_panel.clear();
+    button_panel.add(ncBack).add(colButton);
+    side_panel.add(credits);
+  }
+});
+
+
+
+//  ----------------------------------------------------------------------------
+//  5.2 - North Cascades
+//  ----------------------------------------------------------------------------
+
+
+//var yearLayers = {[]};
+
+
+
+var nc_label = ui.Label({
+  value: 'North Cascades Region',  
+  style: region_title_style            //  Style defined in step above.
+  }
+);
+
+var nc_blurb = ui.Label({
+  value: 'The North Cascades are a forested, mountainous area of immense natural beauty. Relatively unpopulated, the mountains themselves have experienced major wildfires over the years as large forests serve as fuel. The secluded Methow Valley, home to the towns of Mazama and Winthrop is a popular home or travel destination, particularly for skiiers. However, the summer months have brought massive wildfires closer to home for many. ',  
+  style: blurb_style            //  Style defined in step above.
+  }
+);
+
+
+var ncButton = ui.Button({
+  label: 'Next',
+  //style: {position: 'bottom-right'},
+  onClick: function() {
+    side_panel.clear();
+    //side_panel.add(title);
+    side_panel.add(nc_label).add(nc_blurb);
+    //map.remove(decade_legend);
+    map.layers().get(0).setShown(0);
+    map.layers().get(1).setShown(0);
+    map.layers().get(2).setShown(0);
+    map.layers().get(3).setShown(0);
+    map.layers().get(4).setShown(0);
+    map.layers().get(5).setShown(0);
+
+    layers.set(6, null).set(7, null).set(8, null).set(9, null).set(10, null).set(11, null);
+    layers.set(6, population).set(7, img2020).set(8, nbr2020).set(9, l2018).set(10, l2019).set(11, l2020);
+    // map.layers().get(5).setShown(0);
+    // map.layers().get(6).setShown(0);
+    map.layers().get(9).setShown(1);
+    map.layers().get(10).setShown(1);
+    map.layers().get(11).setShown(1);
+    map.layers().get(9).setOpacity(0.5);
+    map.layers().get(10).setOpacity(0.5);
+    //map.setOptions('HYBRID');
+    map.setCenter(-119.8997687872336,48.54079211145365, 9);
+    side_panel.add(bsCheckbox).add(yrSelect);
+    side_panel.add(reference_label).add(nbrCheckbox).add(imgCheckbox).add(popCheckbox);
+    side_panel.add(legend_label).add(burn_legend);
+    side_panel.add(nbr_legend).add(pop_legend);
+    side_panel.add(button_panel);
+    button_panel.clear();
+    button_panel.add(decBack).add(cgcButton);
+    side_panel.add(credits);
+  }
+});
+
+var ncBack = ui.Button({
+  label: 'Back',
+  //style: {position: 'bottom-left'},
+  onClick: function() {
+    side_panel.clear();
+    //side_panel.add(title);
+    side_panel.add(nc_label).add(nc_blurb);
+    //map.remove(decade_legend);
+    map.layers().get(0).setShown(0);
+    map.layers().get(1).setShown(0);
+    map.layers().get(2).setShown(0);
+    map.layers().get(3).setShown(0);
+    map.layers().get(4).setShown(0);
+    map.layers().get(5).setShown(0);
+
+    layers.set(6, null).set(7, null).set(8, null).set(9, null).set(10, null).set(11, null);
+    layers.set(6, population).set(7, img2020).set(8, nbr2020).set(9, l2018).set(10, l2019).set(11, l2020);
+    // map.layers().get(5).setShown(0);
+    // map.layers().get(6).setShown(0);
+    map.layers().get(9).setShown(1);
+    map.layers().get(10).setShown(1);
+    map.layers().get(11).setShown(1);
+    map.layers().get(9).setOpacity(0.5);
+    map.layers().get(10).setOpacity(0.5);
+    //map.setOptions('HYBRID');
+    map.setCenter(-119.8997687872336,48.54079211145365, 9);
+    side_panel.add(bsCheckbox).add(yrSelect);
+    side_panel.add(reference_label).add(nbrCheckbox).add(imgCheckbox).add(popCheckbox);
+    side_panel.add(legend_label).add(burn_legend);
+    side_panel.add(nbr_legend).add(pop_legend);
+    side_panel.add(button_panel);
+    button_panel.clear();
+    button_panel.add(decBack).add(cgcButton);
+    side_panel.add(credits);
+  }
+});
+
+
+//  ----------------------------------------------------------------------------
+//  5.1 - Decades
+//  ----------------------------------------------------------------------------
+
+
+var dec_label = ui.Label({
+  value: 'Over the past several years wildfires have made headlines as global rising temperatures stoke some of the largest wildfires ever recorded and images of major cities clouded by smoke conjure up an apocalyptic feeling. Washington has been no stranger to these effects and has experienced some of its worst fire years in the last decade. Use this stage of the app to compare the extent of fires across four decades of available Landsat imagery.',  
+  style: blurb_style             //  Style defined in step above.
+  }
+);
+
+var dec1slider = ui.Slider({style: {width: '70%'}});
+dec1slider.setValue(1);
+dec1slider.onChange(function(value) {
+  layers.get(2).setOpacity(value);
+});
+
+var dec1Checkbox = ui.Checkbox('1984-1993', true);
+
+dec1Checkbox.onChange(function(checked) {
+  // Shows or hides the first map layer based on the checkbox's value.
+  map.layers().get(2).setShown(checked);
+  
+});
+
+
+var dec2Checkbox = ui.Checkbox('1994-2003', true);
+
+dec2Checkbox.onChange(function(checked) {
+  // Shows or hides the first map layer based on the checkbox's value.
+  map.layers().get(3).setShown(checked);
+});
+
+var dec2slider = ui.Slider({style: {width: '70%'}});
+dec2slider.setValue(1);
+dec2slider.onChange(function(value) {
+  layers.get(3).setOpacity(value);
+});
+
+var dec3Checkbox = ui.Checkbox('2004-2013', true);
+
+dec3Checkbox.onChange(function(checked) {
+  // Shows or hides the first map layer based on the checkbox's value.
+  map.layers().get(4).setShown(checked);
+});
+
+var dec3slider = ui.Slider({style: {width: '70%'}});
+dec3slider.setValue(1);  // Set a default value.
+
+dec3slider.onChange(function(value) {
+  layers.get(4).setOpacity(value);
+});
+
+var dec4Checkbox = ui.Checkbox('2014-2023', true);
+
+dec4Checkbox.onChange(function(checked) {
+  // Shows or hides the first map layer based on the checkbox's value.
+  map.layers().get(5).setShown(checked);
+});
+var dec4slider = ui.Slider({style: {width: '70%'}});
+dec4slider.setValue(1);
+dec4slider.onChange(function(value) {
+  layers.get(5).setOpacity(value);
+});
+
+
+//  Construct legend 
+
+var qualitative_labels = ['1984-1993','1994-2003','2004-2013','2014-2023',];
+var decade_palette = ['#1f618d', '#85c1e9', '#ffcc66', '#ff6347'];
+
+var decade_legend = cart.makeLegend(
+  'Decades',                         // Label for legend
+  decade_palette.reverse(),                                // Palette for image  
+  qualitative_labels.reverse(),                     // labels to display for each color                  
+  'bottom-left'                           // Where you want to put legend on the map.
+);
+
+
+var decButton = ui.Button({
+  label: 'Next',
+  style: {position: 'bottom-right'},
+  onClick: function() {
+    side_panel.clear();
+    side_panel.add(title);
+    side_panel.add(dec_label);
+    //map.remove(sum_legend);
+    //map.remove(recent_legend);
+    map.layers().get(0).setShown(0);
+    map.layers().get(1).setShown(0);
+    layers.set(2, null).set(3,null).set(4, null).set(5, null);
+    layers.set(2, decade1).set(3, decade2).set(4, decade3).set(5, decade4);
+    map.layers().get(2).setShown(1);
+    map.layers().get(3).setShown(1);
+    map.layers().get(4).setShown(1);
+    map.layers().get(5).setShown(1);
+    side_panel.add(decade_legend);
+    side_panel.add(notes_label)
+    .add(dec4Checkbox).add(dec4slider)
+    .add(dec3Checkbox).add(dec3slider)
+    .add(dec2Checkbox).add(dec2slider)
+    .add(dec1Checkbox).add(dec1slider);
+    // Add legend to map.
+    //map.add(decade_legend);
+    side_panel.add(button_panel);
+    button_panel.clear();
+    button_panel.add(homeBack).add(ncButton);
+    side_panel.add(credits);
+  }
+});
+side_panel.add(button_panel);
+button_panel.clear();
+button_panel.add(decButton);
+side_panel.add(credits);
+
+var decBack = ui.Button({
+  label: 'Back',
+  //style: {position: 'bottom-left'},
+  onClick: function() {
+    side_panel.clear();
+    side_panel.add(title);
+    side_panel.add(dec_label);
+    //map.remove(sum_legend);
+    //map.remove(recent_legend);
+    map.centerObject(FS.washington, 7);
+    map.layers().get(0).setShown(0);
+    map.layers().get(1).setShown(0);
+    layers.set(2, null).set(3,null).set(4, null).set(5, null);
+    layers.set(2, decade1).set(3, decade2).set(4, decade3).set(5, decade4);
+    map.layers().get(2).setShown(1);
+    map.layers().get(3).setShown(1);
+    map.layers().get(4).setShown(1);
+    map.layers().get(5).setShown(1);
+    layers.set(6, null).set(7,null).set(8, null).set(9, null).set(10,null).set(11,null);
+    side_panel.add(decade_legend);
+    side_panel.add(notes_label)
+    .add(dec4Checkbox).add(dec4slider)
+    .add(dec3Checkbox).add(dec3slider)
+    .add(dec2Checkbox).add(dec2slider)
+    .add(dec1Checkbox).add(dec1slider);
+    // Add legend to map.
+    //map.add(decade_legend);
+    side_panel.add(button_panel);
+    button_panel.clear();
+    button_panel.add(homeBack).add(ncButton);
+    side_panel.add(credits);
+  }
+});
+
+print(layers);
+
+
+
